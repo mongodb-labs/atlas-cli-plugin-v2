@@ -1,0 +1,16 @@
+[package]
+name = "atlas-cli-rust-plugin"
+version = "0.0.1"
+edition = "2021"
+repository = "https://github.com/mongodb-labs/atlas-cli-plugin-v2"
+
+[dependencies]
+anyhow = "1.0.102"
+clap = { version = "4.6.1", features = ["derive"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+[dist]
