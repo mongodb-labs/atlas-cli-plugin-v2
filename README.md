@@ -32,7 +32,8 @@ atlas-cli-plugin-v2
 Dependencies point one way, from the binary down to the model:
 
 ```
-atlas-cli-v2-plugin -> atlas-cli-v2-derive -> atlas-cli-v2-codegen -> atlas-cli-v2-models
+atlas-cli-v2-plugin ──> atlas-cli-v2-derive ──> atlas-cli-v2-codegen ──> atlas-cli-v2-models
+                    └──> atlas-cli-v2-models
 ```
 
 ## Develop
