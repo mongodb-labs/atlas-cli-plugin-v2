@@ -1,0 +1,10 @@
+name: atlas-cli-rust-plugin
+description: A plugin for the mongodb-atlas-cli that contains the new v2 commands
+version: $VERSION
+github:
+    owner: $GITHUB_REPOSITORY_OWNER
+    name: $GITHUB_REPOSITORY_NAME
+binary: $BINARY
+commands: 
+    v2: 
+        description: Root command of the v2 plugin
