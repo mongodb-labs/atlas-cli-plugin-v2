@@ -47,7 +47,7 @@ jobs:
 
           MANIFEST_VERSION=$(
             cargo metadata --format-version 1 --no-deps |
-              jq -r '.packages[0].version'
+              jq -r '.packages[] | select(.name == "atlas-cli-v2-plugin") | .version'
           )
           if [[ "$VERSION" != "$MANIFEST_VERSION" ]]; then
             echo "::error::Version mismatch"

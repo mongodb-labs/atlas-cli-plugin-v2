@@ -1,0 +1,15 @@
+[package]
+name = "atlas-cli-v2-codegen"
+description = "Turns the spec and hierarchy model into Rust tokens."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+atlas-cli-v2-models = { path = "../atlas-cli-v2-models" }
+
+# The crates in this workspace are still empty, so cargo-udeps cannot see the
+# dependencies they will use. Remove each entry as the crate starts using it.
+[package.metadata.cargo-udeps.ignore]
+normal = ["atlas-cli-v2-models"]

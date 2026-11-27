@@ -1,0 +1,18 @@
+[package]
+name = "atlas-cli-v2-derive"
+description = "The macro that expands the tree into clap commands."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+atlas-cli-v2-codegen = { path = "../atlas-cli-v2-codegen" }
+
+# The crates in this workspace are still empty, so cargo-udeps cannot see the
+# dependencies they will use. Remove each entry as the crate starts using it.
+[package.metadata.cargo-udeps.ignore]
+normal = ["atlas-cli-v2-codegen"]

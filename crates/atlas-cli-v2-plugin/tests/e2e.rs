@@ -9,7 +9,7 @@ use std::process::Command;
 #[cfg(feature = "e2e-tests")]
 #[test]
 fn help_lists_the_v2_subcommand() {
-    let output = Command::new(env!("CARGO_BIN_EXE_atlas-cli-rust-plugin"))
+    let output = Command::new(env!("CARGO_BIN_EXE_atlas-cli-v2-plugin"))
         .arg("--help")
         .output()
         .expect("run the plugin binary");

@@ -1,22 +1,18 @@
-[package]
-name = "atlas-cli-rust-plugin"
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
 version = "0.0.2"
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0"
 repository = "https://github.com/mongodb-labs/atlas-cli-plugin-v2"
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.102"
 clap = { version = "4.6.1", features = ["derive"] }
-
-[features]
-# Gates the integration tests in tests/ that drive the plugin through the
-# installed Atlas CLI. Kept off by default so `cargo test` stays hermetic.
-e2e-tests = []
 
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-[dist]

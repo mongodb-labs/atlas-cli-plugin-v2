@@ -59,10 +59,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2cb931c189b85683d69a5cfad41d4d418671e1ac413dd209f3f2fc31e3cfd902"
 
 [[package]]
-name = "atlas-cli-rust-plugin"
+name = "atlas-cli-v2-codegen"
+version = "0.0.2"
+dependencies = [
+ "atlas-cli-v2-models",
+]
+
+[[package]]
+name = "atlas-cli-v2-derive"
+version = "0.0.2"
+dependencies = [
+ "atlas-cli-v2-codegen",
+]
+
+[[package]]
+name = "atlas-cli-v2-models"
+version = "0.0.2"
+
+[[package]]
+name = "atlas-cli-v2-plugin"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "atlas-cli-v2-derive",
+ "atlas-cli-v2-models",
  "clap",
 ]
 
