@@ -9,6 +9,11 @@ repository = "https://github.com/mongodb-labs/atlas-cli-plugin-v2"
 anyhow = "1.0.102"
 clap = { version = "4.6.1", features = ["derive"] }
 
+[features]
+# Gates the integration tests in tests/ that drive the plugin through the
+# installed Atlas CLI. Kept off by default so `cargo test` stays hermetic.
+e2e-tests = []
+
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
