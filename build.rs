@@ -20,7 +20,7 @@ fn build_template_vars() -> HashMap<&'static str, String> {
         .expect("Failed to read binary name from either CARGO_BIN_NAME or CARGO_PKG_NAME");
 
     // Add .exe extension on Windows
-    let binary = if env::var("CARGO_CFG_TARGET_OS").map_or(false, |os| os == "windows") {
+    let binary = if env::var("CARGO_CFG_TARGET_OS").is_ok_and(|os| os == "windows") {
         format!("{binary}.exe")
     } else {
         binary
