@@ -1,0 +1,23 @@
+[package]
+name = "atlas-cli-v2-plugin"
+description = "The binary the Atlas CLI runs."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+atlas-cli-v2-derive = { path = "../atlas-cli-v2-derive" }
+atlas-cli-v2-models = { path = "../atlas-cli-v2-models" }
+clap.workspace = true
+
+[features]
+# Gates the integration tests in tests/ that drive the plugin through the
+# installed Atlas CLI. Kept off by default so `cargo test` stays hermetic.
+e2e-tests = []
+
+# The crates in this workspace are still empty, so cargo-udeps cannot see the
+# dependencies they will use. Remove each entry as the crate starts using it.
+[package.metadata.cargo-udeps.ignore]
+normal = ["atlas-cli-v2-derive", "atlas-cli-v2-models"]

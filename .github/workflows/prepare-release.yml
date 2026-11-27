@@ -64,13 +64,16 @@ jobs:
         run: |
           case "$INPUT_VERSION" in
             major|minor|patch)
-              cargo set-version --bump "$INPUT_VERSION"
+              cargo set-version --workspace --bump "$INPUT_VERSION"
               ;;
             *)
-              cargo set-version "$INPUT_VERSION"
+              cargo set-version --workspace "$INPUT_VERSION"
               ;;
           esac
-          VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          VERSION=$(
+            cargo metadata --format-version 1 --no-deps |
+              jq -r '.packages[] | select(.name == "atlas-cli-v2-plugin") | .version'
+          )
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Create release branch
         env:
@@ -95,7 +98,12 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           message: >-
             chore(release): prepare for ${{ steps.set-version.outputs.version }}
-          paths: Cargo.toml Cargo.lock CHANGELOG.md LICENSE-3RD-PARTY.txt
+          paths: >-
+            Cargo.toml Cargo.lock CHANGELOG.md LICENSE-3RD-PARTY.txt
+            crates/atlas-cli-v2-plugin/Cargo.toml
+            crates/atlas-cli-v2-codegen/Cargo.toml
+            crates/atlas-cli-v2-derive/Cargo.toml
+            crates/atlas-cli-v2-models/Cargo.toml
       - name: Create release pull request
         env:
           VERSION: ${{ steps.set-version.outputs.version }}
