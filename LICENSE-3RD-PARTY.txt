@@ -11,7 +11,7 @@ OVERVIEW OF LICENSES:
 -----------------------------------------------------------------------------
                         Apache License 2.0
         applies to: 
-        - atlas-cli-rust-plugin 0.0.1 (https://github.com/mongodb-labs/atlas-cli-plugin-v2)
+        - atlas-cli-rust-plugin 0.0.2 (https://github.com/mongodb-labs/atlas-cli-plugin-v2)
 -----------------------------------------------------------------------------
 
 
