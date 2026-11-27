@@ -1,0 +1,25 @@
+name: Set up Rust
+description: Installs the stable Rust toolchain, caches cargo, and installs cargo-binstall.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      shell: bash
+      run: |
+        rustup update stable
+        rustup default stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install cargo-binstall
+      uses: cargo-bins/cargo-binstall@v1.16.2

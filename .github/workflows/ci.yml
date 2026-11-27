@@ -14,73 +14,84 @@ env:
   CARGO_ABOUT_VERSION: 0.8.4
 
 jobs:
-  check:
+  fmt:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-    - name: Install Rust toolchain
-      run: |
-        rustup update stable
-        rustup default stable
-        rustup component add clippy rustfmt
-        rustup toolchain install nightly
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Run clippy
+        run: cargo clippy --all-targets -- -D warnings
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Build
+        run: cargo build --verbose
 
-    - name: Install cargo-binstall
-      uses: cargo-bins/cargo-binstall@v1.16.2
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Install cargo-deny
+        run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_DENY_VERSION }} cargo-deny
+      - name: Run cargo deny
+        run: cargo deny check
 
-    - name: Install cargo tools
-      run: |
-        cargo binstall --no-confirm --locked --version ${{ env.CARGO_DENY_VERSION }} cargo-deny
-        cargo binstall --no-confirm --locked --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
-        cargo binstall --no-confirm --locked --version ${{ env.CARGO_UDEPS_VERSION }} cargo-udeps
-        cargo binstall --no-confirm --locked --version ${{ env.CARGO_ABOUT_VERSION }} cargo-about
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Install cargo-audit
+        run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
+      - name: Run cargo audit
+        run: cargo audit
 
-    - name: Check formatting
-      run: cargo fmt --all -- --check
+  udeps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Install nightly toolchain
+        run: rustup toolchain install nightly
+      - name: Install cargo-udeps
+        run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_UDEPS_VERSION }} cargo-udeps
+      - name: Run cargo udeps (package dependencies)
+        run: cargo +nightly udeps
+      - name: Run cargo udeps (dev dependencies)
+        run: cargo +nightly udeps --all-features --all-targets
 
-    - name: Run clippy
-      run: cargo clippy --all-targets -- -D warnings
-
-    - name: Build
-      run: cargo build --verbose
-
-    - name: Run cargo deny
-      run: cargo deny check
-
-    - name: Run cargo audit
-      run: cargo audit
-
-    - name: Run cargo udeps (package dependencies)
-      run: cargo +nightly udeps
-
-    - name: Run cargo udeps (dev dependencies)
-      run: cargo +nightly udeps --all-features --all-targets
-
-    - name: Verify LICENSE-3RD-PARTY.txt is up to date
-      run: |
-        set -euo pipefail
-        cargo about generate --locked about.hbs > LICENSE-3RD-PARTY-generated.txt
-        if ! diff -q LICENSE-3RD-PARTY.txt LICENSE-3RD-PARTY-generated.txt > /dev/null; then
-          echo "ERROR: LICENSE-3RD-PARTY.txt is not up to date!"
-          echo "Please run: cargo about generate about.hbs > LICENSE-3RD-PARTY.txt"
-          echo "Differences found:"
-          diff LICENSE-3RD-PARTY.txt LICENSE-3RD-PARTY-generated.txt || true
-          exit 1
-        fi
-        rm LICENSE-3RD-PARTY-generated.txt
-        echo "LICENSE-3RD-PARTY.txt is up to date"
+  license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Install cargo-about
+        run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_ABOUT_VERSION }} cargo-about
+      - name: Verify LICENSE-3RD-PARTY.txt is up to date
+        run: |
+          set -euo pipefail
+          cargo about generate --locked about.hbs > LICENSE-3RD-PARTY-generated.txt
+          if ! diff -q LICENSE-3RD-PARTY.txt LICENSE-3RD-PARTY-generated.txt > /dev/null; then
+            echo "ERROR: LICENSE-3RD-PARTY.txt is not up to date!"
+            echo "Please run: cargo about generate about.hbs > LICENSE-3RD-PARTY.txt"
+            echo "Differences found:"
+            diff LICENSE-3RD-PARTY.txt LICENSE-3RD-PARTY-generated.txt || true
+            exit 1
+          fi
+          rm LICENSE-3RD-PARTY-generated.txt
+          echo "LICENSE-3RD-PARTY.txt is up to date"
 
   test-matrix:
     runs-on: ${{ matrix.os }}
@@ -91,45 +102,22 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v6
-
-    - name: Install Rust toolchain
-      run: |
-        rustup update stable
-        rustup default stable
-
-    - name: Cache cargo registry
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
-
-    - name: Install cargo-binstall
-      uses: cargo-bins/cargo-binstall@v1.16.2
-
-    - name: Install cargo-llvm-cov
-      shell: bash
-      run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_LLVM_COV_VERSION }} cargo-llvm-cov
-
-    - name: Build
-      run: cargo build --verbose
-
-    - name: Run tests
-      run: cargo test --verbose
-
-    - name: Generate coverage report
-      run: cargo llvm-cov --verbose --lcov --output-path=${{ matrix.os }}-unit-tests.lcov
-
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-${{ matrix.os }}
-        path: ${{ matrix.os }}-unit-tests.lcov
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-rust
+      - name: Install cargo-llvm-cov
+        shell: bash
+        run: cargo binstall --no-confirm --locked --version ${{ env.CARGO_LLVM_COV_VERSION }} cargo-llvm-cov
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Generate coverage report
+        run: cargo llvm-cov --verbose --lcov --output-path=${{ matrix.os }}-unit-tests.lcov
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: ${{ matrix.os }}-unit-tests.lcov
 
   e2e-tests:
     runs-on: ubuntu-latest
@@ -216,3 +204,23 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.lcov-files.outputs.paths }}
+
+  # The single status check branch protection should require. It runs even when
+  # a job above failed or was skipped, and fails unless every one succeeded.
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [fmt, clippy, build, deny, audit, udeps, license, test-matrix, e2e-tests, coverage]
+    steps:
+      - name: Verify every job succeeded
+        run: |
+          results='${{ join(needs.*.result, ' ') }}'
+          echo "job results: $results"
+          for result in $results; do
+            if [ "$result" != "success" ]; then
+              echo "At least one required job did not succeed."
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded."
