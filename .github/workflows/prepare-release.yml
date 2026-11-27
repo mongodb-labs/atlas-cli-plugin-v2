@@ -72,6 +72,13 @@ jobs:
           esac
           VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Create release branch
+        env:
+          VERSION: ${{ steps.set-version.outputs.version }}
+        run: |
+          BRANCH="release/prepare-v$VERSION"
+          git switch -c "$BRANCH"
+          git push origin "refs/heads/$BRANCH"
       - name: Update third-party licenses
         run: cargo about generate --locked about.hbs > LICENSE-3RD-PARTY.txt
       - name: Generate changelog
@@ -82,29 +89,26 @@ jobs:
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
-      - name: Create release pull request
-        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+      - name: Commit release changes
+        uses: mongodb/apix-action/commit-changes@ffeae557463e40aeba423c47b790a1926a455cc4
         with:
           token: ${{ steps.app-token.outputs.token }}
-          committer: >-
-            ${{ steps.app-token.outputs.user-name }}
-            <${{ steps.app-token.outputs.user-email }}>
-          author: >-
-            ${{ steps.app-token.outputs.user-name }}
-            <${{ steps.app-token.outputs.user-email }}>
-          add-paths: |
-            Cargo.toml
-            Cargo.lock
-            CHANGELOG.md
-            LICENSE-3RD-PARTY.txt
-          title: >-
+          message: >-
             chore(release): prepare for ${{ steps.set-version.outputs.version }}
-          commit-message: >-
-            chore(release): prepare for ${{ steps.set-version.outputs.version }}
-          branch: "release/prepare-v${{ steps.set-version.outputs.version }}"
-          base: main
-          body: >-
-            Prepare the ${{ steps.set-version.outputs.version }} release.
+          paths: Cargo.toml Cargo.lock CHANGELOG.md LICENSE-3RD-PARTY.txt
+      - name: Create release pull request
+        env:
+          VERSION: ${{ steps.set-version.outputs.version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr create \
+            --base main \
+            --head "release/prepare-v$VERSION" \
+            --title "chore(release): prepare for $VERSION" \
+            --body "$(cat <<EOF
+          Prepare the $VERSION release.
 
-            Merging this PR triggers **Tag Release** to tag the merged commit
-            and start the release workflow.
+          Merging this PR triggers **Tag Release** to tag the merged commit
+          and start the release workflow.
+          EOF
+          )"
